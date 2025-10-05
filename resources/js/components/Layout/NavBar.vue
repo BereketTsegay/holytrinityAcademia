@@ -46,12 +46,12 @@
               class="flex items-center space-x-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <img
-                :src="user.photo_url"
-                :alt="user.full_name"
+                :src="user?.photo_url"
+                :alt="user?.full_name"
                 class="w-8 h-8 rounded-full border-2 border-gray-200"
               >
               <span class="hidden md:block text-gray-700 font-medium">
-                {{ user.first_name }}
+                {{ user?.first_name }}
               </span>
               <ChevronDownIcon class="w-4 h-4 text-gray-500" />
             </button>
@@ -62,8 +62,8 @@
               class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200"
             >
               <div class="px-4 py-2 border-b border-gray-100">
-                <p class="text-sm font-medium text-gray-900">{{ user.full_name }}</p>
-                <p class="text-sm text-gray-500 capitalize">{{ user.role_name }}</p>
+                <p class="text-sm font-medium text-gray-900">{{ user?.full_name }}</p>
+                <p class="text-sm text-gray-500 capitalize">{{ user?.role_name }}</p>
               </div>
 
               <router-link
@@ -132,8 +132,8 @@ import {
 export default {
   name: 'NavBar',
   components: {
-    BellIcon,
-    ChevronDownIcon,
+    BellIcon ,
+    ChevronDownIcon ,
     UserIcon,
     LogoutIcon,
     MenuIcon
@@ -153,7 +153,7 @@ export default {
         { name: 'Dashboard', to: '/' }
       ]
 
-      if (this.user.is_admin || this.user.is_teacher) {
+      if (this.user?.is_admin || this.user?.is_teacher) {
         baseRoutes.push(
           { name: 'Classes', to: '/classes' },
           { name: 'Attendance', to: '/attendance' },
@@ -161,7 +161,14 @@ export default {
         )
       }
 
-      if (this.user.is_student) {
+      if (this.user?.is_admin) {
+        baseRoutes.push(
+          { name: 'Users', to: '/users' },
+          { name: 'Invite User', to: '/users/invite' }
+        )
+      }
+
+      if (this.user?.is_student) {
         baseRoutes.push(
           { name: 'My Classes', to: '/my-classes' },
           { name: 'Library', to: '/library' }
@@ -172,7 +179,7 @@ export default {
         { name: 'Calendar', to: '/calendar' }
       )
 
-      if (this.user.is_admin || this.user.is_teacher) {
+      if (this.user?.is_admin || this.user?.is_teacher) {
         baseRoutes.push(
           { name: 'Reports', to: '/reports' }
         )

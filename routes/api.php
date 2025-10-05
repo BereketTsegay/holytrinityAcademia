@@ -8,7 +8,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -54,4 +56,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/attendance', [ReportController::class, 'attendanceReport']);
     Route::get('/reports/library', [ReportController::class, 'libraryReport']);
     Route::get('/reports/academic', [ReportController::class, 'academicReport']);
+
+    // User routes
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+    Route::post('/users/bulk-action', [UserController::class, 'bulkAction']);
+    Route::post('/users/{user}/send-invitation', [UserController::class, 'sendInvitation']);
+    Route::get('/user-stats', [UserController::class, 'getUserStats']);
+    
+    // Role and permission routes
+    Route::get('/roles', [RolePermissionController::class, 'getRoles']);
+    Route::post('/roles', [RolePermissionController::class, 'createRole']);
+    Route::put('/roles/{role}', [RolePermissionController::class, 'updateRole']);
+    Route::delete('/roles/{role}', [RolePermissionController::class, 'deleteRole']);
+    Route::get('/permissions', [RolePermissionController::class, 'getPermissions']);
+    Route::post('/permissions/sync', [RolePermissionController::class, 'syncPermissions']);
+
 });

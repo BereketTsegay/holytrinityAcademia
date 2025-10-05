@@ -62,7 +62,41 @@ const routes = [
     name: 'Reports',
     component: () => import('../views/Reports/Index.vue'),
     meta: { requiresAuth: true, permission: 'view reports' }
+  },
+  // User management routes
+{
+  path: '/users',
+  name: 'Users',
+  component: () => import('../views/Users/index.vue'),
+  meta: { requiresAuth: true, permission: 'manage users' }
+},
+{
+  path: '/users/create',
+  name: 'UserCreate',
+  component: () => import('../views/Users/UserForm.vue'),
+  meta: { requiresAuth: true, permission: 'manage users' }
+},
+{
+  path: '/users/:id/edit',
+  name: 'UserEdit',
+  component: () => import('../views/Users/UserForm.vue'),
+  meta: { requiresAuth: true, permission: 'manage users' }
+},
+{
+  path: '/users/roles',
+  name: 'RoleManagement',
+  component: () => import('../views/Users/RoleManagement.vue'),
+  meta: { requiresAuth: true, permission: 'manage roles' }
+},
+{
+  path: '/users/invite',
+  name: 'UserInvitation',
+  component: () => import('../views/Admin/UserInvitation.vue'),
+  meta: { 
+    requiresAuth: true, 
+    permission: 'create users' 
   }
+}
 ];
 
 const router = createRouter({

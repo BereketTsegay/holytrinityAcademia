@@ -76,11 +76,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->status !== 'active') {
-            return response()->json([
-                'message' => 'Your account is not active. Please contact administrator.'
-            ], 403);
-        }
+        // if ($user->status !== 'active') {
+        //     return response()->json([
+        //         'message' => 'Your account is not active. Please contact administrator.'
+        //     ], 403);
+        // }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

@@ -42,7 +42,7 @@
 </template>
 
 <script>
-import { UsersIcon, BookOpenIcon, AcademicCapIcon, CalendarIcon } from '@heroicons/vue/outline';
+import { UsersIcon, BookOpenIcon, AcademicCapIcon, CalendarIcon } from '@vue-hero-icons/outline';
 
 export default {
   name: 'Dashboard',
