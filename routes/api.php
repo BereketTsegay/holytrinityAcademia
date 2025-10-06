@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
@@ -30,8 +31,24 @@ Route::middleware('auth:sanctum')->group(function () {
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
-    // Departments
-    Route::apiResource('departments', DepartmentController::class);
+
+  
+    // Department routes
+    Route::get('/departments', [DepartmentController::class, 'index']);
+    Route::post('/departments', [DepartmentController::class, 'store']);
+    Route::get('/departments/{department}', [DepartmentController::class, 'show']);
+    Route::put('/departments/{department}', [DepartmentController::class, 'update']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+    Route::post('/departments/bulk-action', [DepartmentController::class, 'bulkAction']);
+    Route::get('/departments/{department}/teachers', [DepartmentController::class, 'getTeachers']);
+    Route::get('/departments/stats', [DepartmentController::class, 'getStats']);
+    Route::get('/departments-list', [DepartmentController::class, 'getAll']);
+
+// Book report routes
+Route::get('/books/reports', [BookController::class, 'reports']);
+
+// Department report routes
+Route::get('/reports/departments', [ReportController::class, 'departmentReport']);
 
     // Classes
     Route::apiResource('classes', ClassController::class);
@@ -74,5 +91,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/roles/{role}', [RolePermissionController::class, 'deleteRole']);
     Route::get('/permissions', [RolePermissionController::class, 'getPermissions']);
     Route::post('/permissions/sync', [RolePermissionController::class, 'syncPermissions']);
+
+    // Calendar routes
+    Route::get('/calendar', [CalendarController::class, 'index']);
+    Route::post('/calendar', [CalendarController::class, 'store']);
+    Route::get('/calendar/{event}', [CalendarController::class, 'show']);
+    Route::put('/calendar/{event}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/{event}', [CalendarController::class, 'destroy']);
+    Route::post('/calendar/bulk-delete', [CalendarController::class, 'bulkDelete']);
+    Route::get('/calendar/upcoming', [CalendarController::class, 'upcomingEvents']);
+    Route::get('/calendar/statistics', [CalendarController::class, 'eventStatistics']);
 
 });

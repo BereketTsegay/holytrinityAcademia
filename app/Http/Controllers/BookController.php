@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
@@ -204,4 +204,118 @@ class BookController extends Controller
 
         return response()->json($categories);
     }
+    public function reports(Request $request)
+{
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after_or_equal:start_date',
+        'report_type' => 'required|in:borrowings,overdue,popular,categories'
+    ]);
+
+    switch ($request->report_type) {
+        case 'borrowings':
+            return $this->borrowingsReport($request);
+        case 'overdue':
+            return $this->overdueReport($request);
+        case 'popular':
+            return $this->popularBooksReport($request);
+        case 'categories':
+            return $this->categoriesReport($request);
+    }
+}
+
+private function borrowingsReport($request)
+{
+    $borrowings = BookBorrowing::with(['book', 'student'])
+        ->whereBetween('borrowed_date', [$request->start_date, $request->end_date])
+        ->selectRaw('
+            COUNT(*) as total_borrowings,
+            SUM(CASE WHEN status = "borrowed" THEN 1 ELSE 0 END) as active_borrowings,
+            SUM(CASE WHEN status = "returned" THEN 1 ELSE 0 END) as returned_books,
+            SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as overdue_books,
+            DATE(borrowed_date) as date
+        ')
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
+
+    $summary = BookBorrowing::whereBetween('borrowed_date', [$request->start_date, $request->end_date])
+        ->selectRaw('
+            COUNT(*) as total_borrowings,
+            SUM(CASE WHEN status = "borrowed" THEN 1 ELSE 0 END) as active_borrowings,
+            SUM(CASE WHEN status = "returned" THEN 1 ELSE 0 END) as returned_books,
+            SUM(CASE WHEN status = "overdue" THEN 1 ELSE 0 END) as overdue_books
+        ')
+        ->first();
+
+    return response()->json([
+        'borrowings' => $borrowings,
+        'summary' => $summary,
+        'period' => [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date
+        ]
+    ]);
+}
+
+private function overdueReport($request)
+{
+    $overdueBooks = BookBorrowing::with(['book', 'student'])
+        ->where('status', 'borrowed')
+        ->where('due_date', '<', now())
+        ->whereBetween('borrowed_date', [$request->start_date, $request->end_date])
+        ->orderBy('due_date')
+        ->get();
+
+    $summary = [
+        'total_overdue' => $overdueBooks->count(),
+        'total_due_amount' => $overdueBooks->sum('fine_amount'),
+        'average_overdue_days' => $overdueBooks->avg('overdue_days')
+    ];
+
+    return response()->json([
+        'overdue_books' => $overdueBooks,
+        'summary' => $summary,
+        'generated_at' => now()
+    ]);
+}
+
+private function popularBooksReport($request)
+{
+    $popularBooks = BookBorrowing::with('book')
+        ->whereBetween('borrowed_date', [$request->start_date, $request->end_date])
+        ->selectRaw('book_id, COUNT(*) as borrow_count')
+        ->groupBy('book_id')
+        ->orderBy('borrow_count', 'desc')
+        ->limit(10)
+        ->get()
+        ->load('book');
+
+    return response()->json([
+        'popular_books' => $popularBooks,
+        'period' => [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date
+        ]
+    ]);
+}
+
+private function categoriesReport($request)
+{
+    $categories = Book::withCount(['borrowings' => function ($query) use ($request) {
+            $query->whereBetween('borrowed_date', [$request->start_date, $request->end_date]);
+        }])
+        ->selectRaw('category, COUNT(*) as total_books, SUM(quantity) as total_copies, SUM(available) as available_copies')
+        ->groupBy('category')
+        ->orderBy('total_books', 'desc')
+        ->get();
+
+    return response()->json([
+        'categories' => $categories,
+        'period' => [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date
+        ]
+    ]);
+}
 }

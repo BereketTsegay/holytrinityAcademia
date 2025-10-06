@@ -96,6 +96,52 @@ const routes = [
     requiresAuth: true, 
     permission: 'create users' 
   }
+},
+// Department routes
+{
+  path: '/departments',
+  name: 'Departments',
+  component: () => import('../views/Departments/index.vue'),
+  meta: { requiresAuth: true, permission: 'manage classes' }
+},
+// {
+//   path: '/departments/:id',
+//   name: 'DepartmentShow',
+//   component: () => import('../views/Departments/Show.vue'),
+//   meta: { requiresAuth: true }
+// },
+
+// Report routes
+{
+  path: '/reports/books',
+  name: 'BookReports',
+  component: () => import('../views/Reports/BookReports.vue'),
+  meta: { requiresAuth: true, permission: 'view reports' }
+},
+// {
+//   path: '/reports/departments',
+//   name: 'DepartmentReports',
+//   component: () => import('../views/Reports/DepartmentReports.vue'),
+//   meta: { requiresAuth: true, permission: 'view reports' }
+// }
+
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: () => import('../views/Calendar/Index.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+  path: '/profile',
+  name: 'Profile',
+  component: () => import('../views/Profile/index.vue'),
+  meta: { requiresAuth: true }
+},
+{
+  path: '/library',
+  name: 'Library',
+  component: () => import('../views/Library/Index.vue'),
+  meta: { requiresAuth: true }
 }
 ];
 

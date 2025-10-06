@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
@@ -286,4 +286,123 @@ class ReportController extends Controller
         // CSV generation logic would go here
         return response()->json(['message' => 'CSV export not implemented yet']);
     }
+
+    public function departmentReport(Request $request)
+{
+    $request->validate([
+        'department_id' => 'required|exists:departments,id',
+        'report_type' => 'required|in:overview,classes,teachers,students'
+    ]);
+
+    $department = Department::with(['classes', 'subjects'])->find($request->department_id);
+
+    switch ($request->report_type) {
+        case 'overview':
+            return $this->departmentOverviewReport($department);
+        case 'classes':
+            return $this->departmentClassesReport($department);
+        case 'teachers':
+            return $this->departmentTeachersReport($department);
+        case 'students':
+            return $this->departmentStudentsReport($department, $request);
+    }
+}
+
+private function departmentOverviewReport($department)
+{
+    $stats = [
+        'total_classes' => $department->classes->count(),
+        'total_subjects' => $department->subjects->count(),
+        'total_students' => $department->classes->sum(function ($class) {
+            return $class->students->count();
+        }),
+        'total_teachers' => $department->classes->unique('teacher_id')->count(),
+        'average_class_size' => $department->classes->avg(function ($class) {
+            return $class->students->count();
+        })
+    ];
+
+    return response()->json([
+        'department' => $department,
+        'stats' => $stats,
+        'report_date' => now()
+    ]);
+}
+
+private function departmentClassesReport($department)
+{
+    $classes = $department->classes()
+        ->with(['teacher', 'students'])
+        ->withCount('students')
+        ->get()
+        ->map(function ($class) {
+            return [
+                'id' => $class->id,
+                'name' => $class->name,
+                'teacher' => $class->teacher,
+                'student_count' => $class->students_count,
+                'capacity' => $class->capacity,
+                'utilization_rate' => $class->capacity > 0 ? ($class->students_count / $class->capacity) * 100 : 0
+            ];
+        });
+
+    return response()->json([
+        'department' => $department->only(['id', 'name']),
+        'classes' => $classes,
+        'report_date' => now()
+    ]);
+}
+
+private function departmentTeachersReport($department)
+{
+    $teachers = User::role('teacher')
+        ->whereHas('teacherClasses', function ($query) use ($department) {
+            $query->where('department_id', $department->id);
+        })
+        ->withCount(['teacherClasses' => function ($query) use ($department) {
+            $query->where('department_id', $department->id);
+        }])
+        ->with(['subjects'])
+        ->get();
+
+    return response()->json([
+        'department' => $department->only(['id', 'name']),
+        'teachers' => $teachers,
+        'report_date' => now()
+    ]);
+}
+
+private function departmentStudentsReport($department, $request)
+{
+    $students = User::role('student')
+        ->whereHas('attendances.class', function ($query) use ($department) {
+            $query->where('department_id', $department->id);
+        })
+        ->with(['attendances' => function ($query) use ($department, $request) {
+            $query->whereHas('class', function ($q) use ($department) {
+                $q->where('department_id', $department->id);
+            });
+        }])
+        ->get()
+        ->map(function ($student) {
+            $totalClasses = $student->attendances->count();
+            $presentClasses = $student->attendances->where('status', 'present')->count();
+            
+            return [
+                'id' => $student->id,
+                'name' => $student->full_name,
+                'email' => $student->email,
+                'student_id' => $student->student_id,
+                'total_classes' => $totalClasses,
+                'present_classes' => $presentClasses,
+                'attendance_rate' => $totalClasses > 0 ? ($presentClasses / $totalClasses) * 100 : 0
+            ];
+        });
+
+    return response()->json([
+        'department' => $department->only(['id', 'name']),
+        'students' => $students,
+        'report_date' => now()
+    ]);
+}
 }
